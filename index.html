@@ -1,0 +1,684 @@
+<!doctype html><html lang="en"><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#faf9f5;color:#141413}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>Korean Saju Reader</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Gowun+Batang:wght@400;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Sans+KR:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&family=Noto+Serif+KR:wght@500;700&display=swap">
+<style>
+/* Layout: two-column studio — birth details pinned left, the reading flows right; one column on phones. */
+:root{
+  --bg:#ECEFED; --surface:#F7F9F8; --sunk:#E2E7E4; --ink:#15201D; --muted:#58665F; --line:#CDD6D1;
+  --accent:#1D6A5A; --accent-ink:#FFFFFF; --accent-soft:#D5E8E2;
+  --wood:#3B8A4C; --fire:#C4432D; --earth:#AE7F1F; --metal:#7D878D; --water:#203A63;
+  --wood-bg:#DCEEDF; --fire-bg:#F6DCD5; --earth-bg:#F2E6C9; --metal-bg:#E3E7E9; --water-bg:#D7E0EE;
+  --f-display:"Gowun Batang","Noto Serif KR",Georgia,serif;
+  --f-han:"Noto Serif KR","Gowun Batang","Songti SC",serif;
+  --f-body:"IBM Plex Sans","IBM Plex Sans KR",system-ui,-apple-system,"Apple SD Gothic Neo",sans-serif;
+  --f-mono:"IBM Plex Mono",ui-monospace,Menlo,monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#0F1514; --surface:#171F1D; --sunk:#0B100F; --ink:#E4EBE8; --muted:#94A39D; --line:#2A3633;
+  --accent:#5CBFA7; --accent-ink:#06201A; --accent-soft:#1C3631;
+  --wood:#6FC481; --fire:#F07D66; --earth:#E2B653; --metal:#B8C2C8; --water:#86A9E3;
+  --wood-bg:#173022; --fire-bg:#3A1C17; --earth-bg:#33290F; --metal-bg:#262D31; --water-bg:#15233B;
+  color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0F1514; --surface:#171F1D; --sunk:#0B100F; --ink:#E4EBE8; --muted:#94A39D; --line:#2A3633;
+  --accent:#5CBFA7; --accent-ink:#06201A; --accent-soft:#1C3631;
+  --wood:#6FC481; --fire:#F07D66; --earth:#E2B653; --metal:#B8C2C8; --water:#86A9E3;
+  --wood-bg:#173022; --fire-bg:#3A1C17; --earth-bg:#33290F; --metal-bg:#262D31; --water-bg:#15233B;
+  color-scheme:dark}
+
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:15px;line-height:1.55;padding-inline:20px;padding-block:28px 56px}
+.wrap{max-width:1180px;margin:0 auto;display:grid;grid-template-columns:340px minmax(0,1fr);gap:40px;align-items:start}
+@media (max-width:880px){.wrap{grid-template-columns:1fr;gap:28px}}
+
+/* masthead */
+.mast{grid-column:1/-1;display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:12px 24px;border-bottom:1px solid var(--line);padding-bottom:18px}
+.brand{display:flex;align-items:baseline;gap:14px}
+.brand .han{font-family:var(--f-han);font-weight:700;font-size:44px;line-height:1;letter-spacing:.02em}
+.brand h1{font-family:var(--f-display);font-weight:700;font-size:28px;margin:0;line-height:1.1}
+.brand p{margin:2px 0 0;color:var(--muted);font-size:14px}
+.cycle{display:flex;gap:6px;flex-wrap:wrap}
+.cycle span{font-family:var(--f-mono);font-size:11px;letter-spacing:.06em;text-transform:uppercase;padding:3px 8px;border-radius:99px}
+
+/* form */
+aside{position:sticky;top:calc(env(safe-area-inset-top,0px) + 20px)}
+@media (max-width:880px){aside{position:static}}
+form{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:20px;display:flex;flex-direction:column;gap:14px}
+.field{display:flex;flex-direction:column;gap:5px}
+label,.lbl{font-size:12px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+input[type=text],input[type=date],input[type=time],select{font:inherit;color:var(--ink);background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:9px 10px;width:100%;min-width:0}
+input:focus-visible,select:focus-visible,button:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.check{display:flex;align-items:center;gap:8px;font-size:14px;color:var(--ink);text-transform:none;letter-spacing:0;font-weight:400}
+.check input{width:16px;height:16px;accent-color:var(--accent)}
+.seg{display:grid;grid-template-columns:repeat(3,1fr);border:1px solid var(--line);border-radius:8px;overflow:hidden}
+.seg input{position:absolute;opacity:0;pointer-events:none}
+.seg label{text-transform:none;letter-spacing:0;font-weight:500;font-size:13px;color:var(--ink);text-align:center;padding:8px 4px;cursor:pointer;background:var(--bg)}
+.seg label+input+label,.seg input+label~label{border-left:1px solid var(--line)}
+.seg input:checked+label{background:var(--accent);color:var(--accent-ink)}
+.seg input:focus-visible+label{outline:2px solid var(--accent);outline-offset:-2px}
+button.primary{font:inherit;font-weight:600;background:var(--accent);color:var(--accent-ink);border:0;border-radius:8px;padding:11px 14px;cursor:pointer}
+button.primary:hover{filter:brightness(1.08)}
+.hint{font-size:12.5px;color:var(--muted);margin:0}
+.err{font-size:13px;color:var(--fire);margin:0}
+.example{font-size:12px;color:var(--accent);background:var(--accent-soft);padding:6px 10px;border-radius:6px;margin:0}
+
+/* reading */
+main{display:flex;flex-direction:column;gap:36px;min-width:0}
+section h2{font-family:var(--f-display);font-weight:700;font-size:24px;margin:0 0 4px;text-wrap:balance}
+section .kicker{font-family:var(--f-mono);font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--accent);margin:0 0 6px}
+section .lede{color:var(--muted);margin:0 0 16px;max-width:64ch}
+.prose p{margin:0 0 10px;max-width:66ch}
+
+/* pillars */
+.alts{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:14px}
+.alts button{font:inherit;font-size:13px;border:1px solid var(--line);background:var(--surface);color:var(--ink);border-radius:99px;padding:6px 12px;cursor:pointer}
+.alts button[aria-pressed="true"]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.notice{border:1px solid var(--earth);background:var(--earth-bg);color:var(--ink);border-radius:10px;padding:10px 14px;font-size:14px;margin-bottom:14px;max-width:70ch}
+.pillars{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;max-width:640px}
+.pillar{display:flex;flex-direction:column;gap:6px;align-items:stretch;text-align:center}
+.pillar .ph{font-family:var(--f-mono);font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);display:flex;justify-content:center;gap:6px;align-items:center;min-height:20px}
+.pillar.me .ph{color:var(--accent);font-weight:500}
+.tile{border-radius:12px;padding:10px 4px 8px;display:flex;flex-direction:column;align-items:center;gap:2px;border:1px solid transparent}
+.tile .h{font-family:var(--f-han);font-weight:700;font-size:clamp(34px,7vw,52px);line-height:1.05}
+.tile .k{font-size:13px;font-weight:600}
+.tile .e{font-size:11.5px;opacity:.85}
+.pillar.me .tile:first-of-type{border-color:currentColor;border-width:2px}
+.tile.empty{background:var(--sunk);color:var(--muted);border:1px dashed var(--line)}
+.tile.empty .h{font-family:var(--f-body);font-size:28px;font-weight:400}
+.el-wood{background:var(--wood-bg);color:var(--wood)} .el-fire{background:var(--fire-bg);color:var(--fire)}
+.el-earth{background:var(--earth-bg);color:var(--earth)} .el-metal{background:var(--metal-bg);color:var(--metal)}
+.el-water{background:var(--water-bg);color:var(--water)}
+.tile .k,.tile .e{color:var(--ink)}
+.chartfoot{font-size:13px;color:var(--muted);margin:12px 0 0;max-width:70ch}
+
+/* elements */
+.bars{display:flex;flex-direction:column;gap:8px;max-width:560px}
+.bar{display:grid;grid-template-columns:88px minmax(0,1fr) 34px;gap:12px;align-items:center;font-size:14px}
+.bar .nm{display:flex;gap:6px;align-items:baseline}
+.bar .nm b{font-family:var(--f-han);font-size:17px}
+.bar .track{height:12px;background:var(--sunk);border-radius:99px;overflow:hidden}
+.bar .fill{height:100%;border-radius:99px}
+.bar .n{font-family:var(--f-mono);font-variant-numeric:tabular-nums;text-align:right}
+.tag{display:inline-block;font-size:11px;font-weight:600;letter-spacing:.05em;text-transform:uppercase;padding:2px 7px;border-radius:99px;margin-left:6px}
+.tag.miss{background:var(--fire-bg);color:var(--fire)} .tag.strong{background:var(--accent-soft);color:var(--accent)}
+
+/* day master */
+.dm{display:grid;grid-template-columns:auto minmax(0,1fr);gap:20px;align-items:start}
+@media (max-width:520px){.dm{grid-template-columns:1fr}}
+.seal{width:112px;height:112px;border-radius:16px;display:grid;place-items:center;font-family:var(--f-han);font-weight:700;font-size:64px}
+.dm h3{font-family:var(--f-display);font-size:21px;margin:0 0 6px}
+.traits{display:flex;flex-wrap:wrap;gap:6px;margin:10px 0}
+.traits span{font-size:13px;border:1px solid var(--line);border-radius:99px;padding:3px 10px;background:var(--surface)}
+
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:12px}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:16px;display:flex;flex-direction:column;gap:6px;min-width:0}
+.card .yr{display:flex;align-items:baseline;gap:10px}
+.card .yr b{font-family:var(--f-han);font-size:30px}
+.card .yr span{font-family:var(--f-mono);font-size:13px;color:var(--muted)}
+.card h4{margin:0;font-size:15px}
+.card p{margin:0;font-size:14px}
+
+/* name */
+.namebox{display:flex;flex-wrap:wrap;gap:10px;align-items:flex-end;margin-bottom:16px}
+.namebox .field{flex:1 1 220px}
+.namebox input{font-family:var(--f-body);font-size:20px}
+button.ghost{font:inherit;font-size:13px;background:transparent;color:var(--accent);border:1px solid var(--accent);border-radius:8px;padding:9px 12px;cursor:pointer}
+.syls{display:flex;flex-wrap:wrap;align-items:center;gap:6px;margin-bottom:12px}
+.syl{border-radius:10px;padding:8px 12px;text-align:center;min-width:64px}
+.syl b{display:block;font-size:26px;font-family:var(--f-han);color:var(--ink)}
+.syl small{font-size:11.5px;font-weight:600}
+.flow{font-family:var(--f-mono);font-size:11px;text-align:center;color:var(--muted);max-width:76px;line-height:1.3}
+.flow.good{color:var(--wood)} .flow.bad{color:var(--fire)}
+
+.names{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:12px}
+.nm-card{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:18px;display:flex;flex-direction:column;gap:10px;min-width:0}
+.nm-card .top{display:flex;align-items:baseline;justify-content:space-between;gap:8px;flex-wrap:wrap}
+.nm-card .ko{font-family:var(--f-display);font-size:30px;font-weight:700;line-height:1}
+.nm-card .rr{font-family:var(--f-mono);font-size:13px;color:var(--muted)}
+.nm-card .hz{font-family:var(--f-han);font-size:38px;font-weight:700;letter-spacing:.06em;line-height:1}
+.nm-card ul{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:6px}
+.nm-card li{display:grid;grid-template-columns:34px minmax(0,1fr);gap:8px;align-items:start;font-size:13.5px}
+.nm-card li .c{font-family:var(--f-han);font-size:22px;font-weight:700;border-radius:6px;text-align:center;line-height:1.4}
+.nm-card .why{font-size:13px;color:var(--muted);border-top:1px solid var(--line);padding-top:10px;margin:0}
+.notes{font-size:13.5px;color:var(--muted);max-width:72ch}
+.notes li{margin-bottom:6px}
+@media (prefers-reduced-motion:no-preference){.fill{transition:width .5s ease}}
+
+/* Progressive reading */
+.reading-hero{background:var(--surface);border:1px solid var(--line);border-radius:24px;padding:28px;margin-bottom:24px}
+.reading-hero h2{font-size:clamp(28px,4vw,40px);line-height:1.2;margin:12px 0}
+.hero-top{display:flex;justify-content:space-between;gap:20px;align-items:center}.hero-top .seal{flex-shrink:0}
+.summary-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin:24px 0}
+.summary-stat{background:var(--sunk);border-radius:12px;padding:14px;min-width:0}.summary-stat small{display:block;color:var(--muted);margin-bottom:8px}.summary-stat b{font-size:16px}
+.reading-hero .primary{width:100%;margin-top:12px}.reading-meta{font-size:13px;color:var(--muted)}
+.reading-nav{display:flex;gap:8px;flex-wrap:wrap;margin:0 0 20px}.reading-nav a{color:var(--accent);border:1px solid var(--line);padding:7px 12px;border-radius:30px;text-decoration:none;font-size:13px}
+.reading-detail{border:1px solid var(--line);background:var(--surface);border-radius:16px;margin:12px 0;overflow:hidden;scroll-margin-top:16px}
+.reading-detail>summary{cursor:pointer;list-style:none;padding:20px;display:flex;gap:16px;align-items:center}.reading-detail>summary::-webkit-details-marker{display:none}
+.reading-detail>summary:after{content:'+';margin-left:auto;font-size:24px;color:var(--accent)}.reading-detail[open]>summary:after{content:'−'}
+.reading-detail>summary b{font-size:18px;display:block}.reading-detail>summary small{display:block;color:var(--muted);margin-top:4px}.detail-index{font:12px var(--f-mono);color:var(--accent)}
+.reading-detail>section{padding:4px 22px 24px;margin:0;border:0}.reading-detail h3{font-family:var(--f-display);font-size:23px}.reading-detail h4{margin:20px 0 8px}
+.reason{border-left:3px solid var(--accent);background:var(--accent-soft);padding:12px 16px;font-size:13px;border-radius:0 8px 8px 0}
+.prompt{padding:16px;background:var(--sunk);border-radius:12px;margin-top:18px}.prompt b{display:block;margin-bottom:5px}
+.role-row{display:grid;grid-template-columns:1fr auto;gap:12px;border-bottom:1px solid var(--line);padding:12px 0}.role-row p{margin:4px 0;font-size:13px;color:var(--muted)}
+.detail-toolbar{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:24px 0 12px}.detail-toolbar h2{margin:0;font-size:24px}
+button:focus-visible,summary:focus-visible,a:focus-visible{outline:3px solid var(--accent);outline-offset:4px}
+@media(max-width:540px){body{padding-inline:14px}.reading-hero{padding:20px}.summary-grid{grid-template-columns:1fr}.summary-stat{display:flex;justify-content:space-between;gap:15px}.summary-stat small{margin:0}.hero-top .seal{width:64px;height:72px;font-size:38px}.reading-detail>summary{padding:16px}.reading-detail>section{padding:0 16px 20px}}
+</style>
+
+<div class="wrap">
+  <header class="mast">
+    <div class="brand">
+      <span class="han" aria-hidden="true">四柱</span>
+      <div>
+        <h1>Korean Saju Reader</h1>
+        <p>Your four pillars of destiny, read the Korean way — plus a Korean name chosen for your chart.</p>
+      </div>
+    </div>
+    <div class="cycle" aria-label="The five elements">
+      <span class="el-wood">Wood 木</span><span class="el-fire">Fire 火</span><span class="el-earth">Earth 土</span><span class="el-metal">Metal 金</span><span class="el-water">Water 水</span>
+    </div>
+  </header>
+
+  <aside>
+    <form id="f" novalidate>
+      <p class="example" id="exampleNote">Showing an example reading. Enter your own details below.</p>
+      <div class="field">
+        <label for="name">Your name</label>
+        <input type="text" id="name" autocomplete="given-name" placeholder="e.g. Emma Clarke">
+      </div>
+      <div class="field">
+        <label for="dob">Date of birth</label>
+        <input type="date" id="dob" min="1900-01-01" max="2100-12-31" required>
+      </div>
+      <div class="field">
+        <label for="place">Where you were born</label>
+        <select id="place"></select>
+      </div>
+      <div class="field">
+        <label for="tob">Time of birth</label>
+        <div class="row2">
+          <input type="time" id="tob" aria-describedby="tobHint">
+          <label class="check" for="noTime"><input type="checkbox" id="noTime" checked> I don't know</label>
+        </div>
+        <p class="hint" id="tobHint">Optional. Without it we read 6 of the 8 characters, which still covers your core nature.</p>
+      </div>
+      <div class="field">
+        <span class="lbl" id="styleLbl">Korean name style</span>
+        <div class="seg" role="radiogroup" aria-labelledby="styleLbl">
+          <input type="radio" name="style" id="sAny" value="any" checked><label for="sAny">Any</label>
+          <input type="radio" name="style" id="sF" value="f"><label for="sF">Feminine</label>
+          <input type="radio" name="style" id="sM" value="m"><label for="sM">Masculine</label>
+        </div>
+      </div>
+      <p class="err" id="err" hidden></p>
+      <button class="primary" type="submit">Read my saju</button>
+    </form>
+  </aside>
+
+  <main id="out" aria-live="polite"></main>
+</div>
+
+<script>
+/* ---------- core tables ---------- */
+const EL=['wood','fire','earth','metal','water'];
+const EL_EN=['Wood','Fire','Earth','Metal','Water'];
+const EL_HAN=['木','火','土','金','水'];
+const EL_KO=['목','화','토','금','수'];
+const STEM_H=['甲','乙','丙','丁','戊','己','庚','辛','壬','癸'];
+const STEM_K=['갑','을','병','정','무','기','경','신','임','계'];
+const STEM_E=[0,0,1,1,2,2,3,3,4,4];
+const BR_H=['子','丑','寅','卯','辰','巳','午','未','申','酉','戌','亥'];
+const BR_K=['자','축','인','묘','진','사','오','미','신','유','술','해'];
+const BR_A=['Rat','Ox','Tiger','Rabbit','Dragon','Snake','Horse','Goat','Monkey','Rooster','Dog','Pig'];
+const BR_E=[4,2,0,0,2,1,1,2,3,3,2,4];
+const mod=(a,n)=>((a%n)+n)%n;
+const yy=i=>i%2===0?'Yang':'Yin';
+
+/* ---------- astronomy ---------- */
+function jdn(y,m,d){const a=Math.floor((14-m)/12),Y=y+4800-a,M=m+12*a-3;return d+Math.floor((153*M+2)/5)+365*Y+Math.floor(Y/4)-Math.floor(Y/100)+Math.floor(Y/400)-32045}
+const jdOf=ms=>ms/86400000+2440587.5;
+function sunLon(jd){
+  const T=(jd-2451545)/36525,r=Math.PI/180;
+  const L0=280.46646+36000.76983*T+0.0003032*T*T;
+  const M=(357.52911+35999.05029*T-0.0001537*T*T)*r;
+  const C=(1.914602-0.004817*T-0.000014*T*T)*Math.sin(M)+(0.019993-0.000101*T)*Math.sin(2*M)+0.000289*Math.sin(3*M);
+  const om=(125.04-1934.136*T)*r;
+  return mod(L0+C-0.00569-0.00478*Math.sin(om),360);
+}
+const monthIdx=lam=>Math.floor(mod(lam-315,360)/30); // 0 = 寅 month, starts at Ipchun (315°)
+const SOLAR_TERMS=['Ipchun (Start of Spring)','Gyeongchip','Cheongmyeong','Ipha (Start of Summer)','Mangjong','Soseo','Ipchu (Start of Autumn)','Baengno','Hallo','Ipdong (Start of Winter)','Daeseol','Sohan'];
+
+/* ---------- time zones ---------- */
+const PLACES=[
+ ['South Korea','Asia/Seoul'],['Japan','Asia/Tokyo'],['China','Asia/Shanghai'],['Taiwan','Asia/Taipei'],['Hong Kong','Asia/Hong_Kong'],
+ ['Singapore','Asia/Singapore'],['Malaysia','Asia/Kuala_Lumpur'],['Philippines','Asia/Manila'],['Vietnam','Asia/Ho_Chi_Minh'],['Thailand','Asia/Bangkok'],
+ ['Indonesia (Jakarta)','Asia/Jakarta'],['India','Asia/Kolkata'],['United Arab Emirates','Asia/Dubai'],['Turkey','Europe/Istanbul'],
+ ['United Kingdom','Europe/London'],['Ireland','Europe/Dublin'],['France','Europe/Paris'],['Germany','Europe/Berlin'],['Netherlands','Europe/Amsterdam'],
+ ['Spain','Europe/Madrid'],['Italy','Europe/Rome'],['Sweden','Europe/Stockholm'],['Poland','Europe/Warsaw'],['Russia (Moscow)','Europe/Moscow'],
+ ['USA – Eastern','America/New_York'],['USA – Central','America/Chicago'],['USA – Mountain','America/Denver'],['USA – Pacific','America/Los_Angeles'],['USA – Hawaii','Pacific/Honolulu'],
+ ['Canada – Eastern','America/Toronto'],['Canada – Pacific','America/Vancouver'],['Mexico (Mexico City)','America/Mexico_City'],['Brazil (São Paulo)','America/Sao_Paulo'],
+ ['Argentina','America/Argentina/Buenos_Aires'],['Chile','America/Santiago'],['Australia – Sydney/Melbourne','Australia/Sydney'],['Australia – Brisbane','Australia/Brisbane'],
+ ['Australia – Perth','Australia/Perth'],['New Zealand','Pacific/Auckland'],['South Africa','Africa/Johannesburg'],['Nigeria','Africa/Lagos'],['Egypt','Africa/Cairo']
+];
+const SOUTH=new Set(['America/Sao_Paulo','America/Argentina/Buenos_Aires','America/Santiago','Australia/Sydney','Australia/Brisbane','Australia/Perth','Pacific/Auckland','Africa/Johannesburg','Asia/Jakarta']);
+function buildPlaces(){
+  const s=document.getElementById('place');
+  let h='<optgroup label="Countries and regions">'+PLACES.map(([n,z])=>`<option value="${z}">${n}</option>`).join('')+'</optgroup><optgroup label="Somewhere else (UTC offset)">';
+  const offs=[];for(let i=-12;i<=14;i++)offs.push(i*60);offs.push(330,345,570,-210);offs.sort((a,b)=>a-b);
+  h+=offs.map(o=>{const sg=o<0?'−':'+',a=Math.abs(o);return `<option value="fixed:${o}">UTC${sg}${Math.floor(a/60)}${a%60?':'+String(a%60).padStart(2,'0'):''}</option>`}).join('')+'</optgroup>';
+  s.innerHTML=h;
+}
+const fmtCache={};
+function offsetMin(tz,utcMs){
+  if(tz.startsWith('fixed:'))return +tz.slice(6);
+  const f=fmtCache[tz]||(fmtCache[tz]=new Intl.DateTimeFormat('en-US',{timeZone:tz,hourCycle:'h23',year:'numeric',month:'numeric',day:'numeric',hour:'numeric',minute:'numeric',second:'numeric'}));
+  const p={};for(const x of f.formatToParts(new Date(utcMs)))p[x.type]=x.value;
+  const asUTC=Date.UTC(+p.year,+p.month-1,+p.day,(+p.hour)%24,+p.minute,+p.second);
+  return Math.round((asUTC-Math.floor(utcMs/1000)*1000)/60000);
+}
+function localToUTC(y,m,d,h,mi,tz){
+  const g=Date.UTC(y,m-1,d,h,mi);
+  const o1=offsetMin(tz,g),o2=offsetMin(tz,g-o1*60000);
+  return g-o2*60000;
+}
+function ymdAdd(y,m,d,n){const t=new Date(Date.UTC(y,m-1,d+n));return [t.getUTCFullYear(),t.getUTCMonth()+1,t.getUTCDate()]}
+
+/* ---------- pillars ---------- */
+function pil(stem,branch){return {s:stem,b:branch}}
+function pillarFromIdx(i){return pil(i%10,i%12)}
+function buildChart(gy,gm,mI,dayYMD,hourBranch){
+  let yr=gy; if(gm<=2&&mI>=10)yr-=1;
+  const yI=mod(yr-4,60), ys=yI%10;
+  const mS=mod((ys%5)*2+2+mI,10), mB=(mI+2)%12;
+  const dI=mod(jdn(...dayYMD)+49,60), ds=dI%10;
+  const out={year:pillarFromIdx(yI),month:pil(mS,mB),day:pillarFromIdx(dI),hour:null,sajuYear:yr};
+  if(hourBranch!=null)out.hour=pil(mod((ds%5)*2+hourBranch,10),hourBranch);
+  return out;
+}
+function compute(inp){
+  const {y,m,d,tz,time}=inp; const res={charts:[],notes:[]};
+  if(time){
+    const [hh,mi]=time;
+    const utc=localToUTC(y,m,d,hh,mi,tz);
+    const mI=monthIdx(sunLon(jdOf(utc)));
+    let day=[y,m,d]; if(hh>=23){day=ymdAdd(y,m,d,1);res.notes.push('Born between 23:00 and midnight, which belongs to the next day\'s Rat (子) hour in traditional reckoning, so the day pillar uses the following date.')}
+    const hb=Math.floor(((hh+1)%24)/2);
+    res.charts.push({label:null,chart:buildChart(y,m,mI,day,hb)});
+    const near=[-90,90].some(k=>monthIdx(sunLon(jdOf(utc+k*60000)))!==mI);
+    if(near)res.notes.push('Your birth time falls within about 90 minutes of a solar-term change, so the month pillar is sensitive to the exact minute.');
+  } else {
+    const start=localToUTC(y,m,d,0,0,tz), nx=ymdAdd(y,m,d,1), end=localToUTC(nx[0],nx[1],nx[2],0,0,tz);
+    const m0=monthIdx(sunLon(jdOf(start))), m1=monthIdx(sunLon(jdOf(end)));
+    if(m0===m1){res.charts.push({label:null,chart:buildChart(y,m,m0,[y,m,d],null)})}
+    else{
+      let lo=start,hi=end;for(let i=0;i<40;i++){const mid=(lo+hi)/2;if(monthIdx(sunLon(jdOf(mid)))===m0)lo=mid;else hi=mid}
+      const local=new Date(hi+offsetMin(tz,hi)*60000);
+      const hm=String(local.getUTCHours()).padStart(2,'0')+':'+String(local.getUTCMinutes()).padStart(2,'0');
+      res.boundary={time:hm,term:SOLAR_TERMS[m1]};
+      res.charts.push({label:`Born before ${hm}`,chart:buildChart(y,m,m0,[y,m,d],null)});
+      res.charts.push({label:`Born after ${hm}`,chart:buildChart(y,m,m1,[y,m,d],null)});
+    }
+  }
+  if(SOUTH.has(tz))res.notes.push('You were born in the Southern Hemisphere. Most practitioners read the chart as is; a minority flip the month pillar to match local seasons. This reading uses the standard method.');
+  return res;
+}
+
+/* ---------- element analysis ---------- */
+function counts(ch){
+  const c=[0,0,0,0,0];
+  for(const k of ['year','month','day','hour']){const p=ch[k];if(!p)continue;c[STEM_E[p.s]]++;c[BR_E[p.b]]++}
+  return c;
+}
+const gen=a=>(a+1)%5, ctl=a=>(a+2)%5;
+function relation(dm,el){
+  if(el===dm)return 'companion';
+  if(gen(el)===dm)return 'resource';
+  if(gen(dm)===el)return 'output';
+  if(ctl(dm)===el)return 'wealth';
+  return 'power';
+}
+
+/* ---------- copy ---------- */
+const DM=[
+ {img:'The tall tree',body:'You grow straight toward what you believe in. People read you as principled and steady, and you tend to take the lead simply by refusing to bend on what matters. Growth for you is slow and real rather than flashy.',traits:['Principled','Natural leader','Steady growth','Can be stubborn']},
+ {img:'The climbing vine',body:'You find a way around obstacles instead of through them. Flexible, tactful and quietly persistent, you thrive by reading people and situations well. Your strength is resilience, and your risk is bending too far to keep the peace.',traits:['Adaptable','Diplomatic','Resilient','Can be indecisive']},
+ {img:'The sun',body:'You give off warmth without trying. Open, generous and visible, you lift the mood of a room and inspire people to act. You shine brightest when you pace yourself, since the sun that never sets eventually burns out.',traits:['Warm','Generous','Inspiring','Can overcommit']},
+ {img:'The candle flame',body:'Your light is focused rather than wide. You notice details others miss, care deeply for a few people, and work with quiet intensity. You do your best work in a calm room where your flame is protected from the wind.',traits:['Perceptive','Devoted','Focused','Can overthink']},
+ {img:'The mountain',body:'You are the person others lean on. Patient, reliable and protective, you hold your ground when things get shaky. Change comes slowly to you, which is both your stability and your challenge.',traits:['Dependable','Patient','Protective','Slow to change']},
+ {img:'The garden soil',body:'You make things grow. Practical, nurturing and versatile, you turn plans into results and look after the people around you. You can absorb other people\'s worries too easily, so keep some ground for yourself.',traits:['Nurturing','Practical','Versatile','Can worry']},
+ {img:'The raw blade',body:'You cut straight to the point. Decisive, loyal and driven by a strong sense of fairness, you are at your best when there is something to fight for. Learning when to sheathe the blade turns strength into leadership.',traits:['Decisive','Loyal','Just','Can be blunt']},
+ {img:'The polished jewel',body:'You value quality over quantity. Refined, precise and quietly self-respecting, you have a strong eye for beauty and detail. You shine under the right light and dislike rough handling, including harsh criticism.',traits:['Refined','Precise','Aesthetic','Sensitive to criticism']},
+ {img:'The ocean',body:'You think in big currents. Curious, free-spirited and resourceful, you connect ideas and people across wide distances. Like the sea you need room to move, and you can grow restless when boxed in.',traits:['Big-picture','Curious','Resourceful','Restless']},
+ {img:'The rain and dew',body:'You work softly and everywhere. Intuitive, imaginative and empathetic, you sense moods before they are spoken. Your influence is gentle but deep, and you sometimes keep more to yourself than you should.',traits:['Intuitive','Gentle','Imaginative','Private']},
+];
+const ELI=[
+ {season:'spring',dir:'east',color:'green',boost:'time among trees and plants, learning something new, morning walks'},
+ {season:'summer',dir:'south',color:'red and warm tones',boost:'sunlight, social plans, creative and performing work'},
+ {season:'the turn of each season',dir:'the center',color:'yellow and earthy browns',boost:'steady routines, cooking, gardening, keeping promises'},
+ {season:'autumn',dir:'west',color:'white, silver and grey',boost:'decluttering, clear rules, precise crafts and tidy finances'},
+ {season:'winter',dir:'north',color:'navy and black',boost:'rest, reflection, reading, swimming or time by water'},
+];
+const YEAR_TXT={
+ companion:['A year of peers','Friends, teammates and rivals take center stage. Good for building alliances and confidence; watch for shared money and competition.'],
+ resource:['A year of support','Learning, mentors and receiving support are the symbolic focus. Good for study, credentials and recharging; avoid waiting for others to move first.'],
+ output:['A year of expression','Your ideas want out. Good for creative work, launching things and speaking up; keep an eye on energy and on saying too much.'],
+ wealth:['A year of results','Practical results and the use of resources are the symbolic focus. Good for business and practical goals; it rewards discipline more than luck.'],
+ power:['A year of responsibility','Duties, status and boundaries are the symbolic focus. Good for promotions and recognition; pace yourself and pick your battles.'],
+};
+
+/* ---------- Hangul helpers ---------- */
+const L_J='ㄱㄲㄴㄷㄸㄹㅁㅂㅃㅅㅆㅇㅈㅉㅊㅋㅌㅍㅎ'.split('');
+const V_J='ㅏㅐㅑㅒㅓㅔㅕㅖㅗㅘㅙㅚㅛㅜㅝㅞㅟㅠㅡㅢㅣ'.split('');
+const T_J=['','ㄱ','ㄲ','ㄳ','ㄴ','ㄵ','ㄶ','ㄷ','ㄹ','ㄺ','ㄻ','ㄼ','ㄽ','ㄾ','ㄿ','ㅀ','ㅁ','ㅂ','ㅄ','ㅅ','ㅆ','ㅇ','ㅈ','ㅊ','ㅋ','ㅌ','ㅍ','ㅎ'];
+const comp=(l,v,t='')=>String.fromCharCode(0xAC00+(L_J.indexOf(l)*21+V_J.indexOf(v))*28+T_J.indexOf(t));
+const isSyl=ch=>{const c=ch.charCodeAt(0);return c>=0xAC00&&c<=0xD7A3};
+const decomp=ch=>{const c=ch.charCodeAt(0)-0xAC00;return [Math.floor(c/588),Math.floor((c%588)/28),c%28]};
+// sound element (발음오행) by initial consonant index
+const INIT_EL={0:0,1:0,15:0, 2:1,3:1,4:1,5:1,16:1, 11:2,18:2, 9:3,10:3,12:3,13:3,14:3, 6:4,7:4,8:4,17:4};
+const RR_I=['g','kk','n','d','tt','r','m','b','pp','s','ss','','j','jj','ch','k','t','p','h'];
+const RR_V=['a','ae','ya','yae','eo','e','yeo','ye','o','wa','wae','oe','yo','u','wo','we','wi','yu','eu','ui','i'];
+const RR_T=['','k','k','k','n','n','n','t','l','k','m','l','l','l','p','l','m','p','p','t','t','ng','t','t','k','t','p','t'];
+function romanize(s){let o='';for(const ch of s){if(!isSyl(ch)){o+=ch;continue}const [l,v,t]=decomp(ch);o+=RR_I[l]+RR_V[v]+RR_T[t]}return o.charAt(0).toUpperCase()+o.slice(1)}
+
+/* rough English → Hangul guess (user can edit) */
+const COMMON={michael:'마이클',christopher:'크리스토퍼',grace:'그레이스',noah:'노아',charlotte:'샬럿',liam:'리엄',william:'윌리엄',james:'제임스',david:'데이비드',daniel:'대니얼',sarah:'세라',emily:'에밀리',olivia:'올리비아',sophia:'소피아',isabella:'이사벨라',amelia:'아멜리아',ava:'에이바',harper:'하퍼',evelyn:'에벌린',abigail:'애비게일',elizabeth:'엘리자베스',chloe:'클로이',zoe:'조이',lily:'릴리',hannah:'해나',grace:'그레이스',benjamin:'벤저민',ethan:'이선',jacob:'제이컵',mason:'메이슨',logan:'로건',henry:'헨리',jack:'잭',oliver:'올리버',thomas:'토머스',matthew:'매슈',andrew:'앤드루',ryan:'라이언',kevin:'케빈',brian:'브라이언',jason:'제이슨',john:'존',robert:'로버트',richard:'리처드',joseph:'조지프',charles:'찰스',george:'조지',peter:'피터',paul:'폴',mark:'마크',steven:'스티븐',stephen:'스티븐',anthony:'앤서니',nathan:'네이선',kate:'케이트',katherine:'캐서린',catherine:'캐서린',jennifer:'제니퍼',jessica:'제시카',ashley:'애슐리',rachel:'레이철',laura:'로라',claire:'클레어',clarke:'클라크',clark:'클라크',smith:'스미스',johnson:'존슨',brown:'브라운',taylor:'테일러',wilson:'윌슨',miller:'밀러',jones:'존스',garcia:'가르시아',martinez:'마르티네스',lopez:'로페스',maria:'마리아',sofia:'소피아',lucas:'루카스',mateo:'마테오',leo:'레오',luca:'루카',emma:'엠마',mia:'미아',anna:'안나',julia:'줄리아',alice:'앨리스',sophie:'소피',alex:'알렉스',alexander:'알렉산더',max:'맥스',sam:'샘',samuel:'새뮤얼',chris:'크리스',nick:'닉',nicholas:'니콜라스',tom:'톰',ben:'벤',lucy:'루시',ella:'엘라',ellie:'엘리',isla:'아일라',freya:'프레야',amy:'에이미',megan:'메건',sean:'숀',michelle:'미셸',nicole:'니콜',victoria:'빅토리아',natalie:'내털리',linda:'린다',susan:'수전',karen:'캐런',lisa:'리사',nancy:'낸시',betty:'베티',helen:'헬렌',jane:'제인',lee:'리',kim:'킴',park:'파크'};
+const GY={'ㅏ':'ㅑ','ㅔ':'ㅖ','ㅗ':'ㅛ','ㅜ':'ㅠ','ㅓ':'ㅕ','ㅣ':'ㅣ'};
+const GW={'ㅏ':'ㅘ','ㅔ':'ㅞ','ㅣ':'ㅟ','ㅗ':'ㅝ','ㅜ':'ㅜ','ㅓ':'ㅝ'};
+function translitWord(w){
+  w=w.toLowerCase().replace(/[^a-z]/g,''); if(!w)return '';
+  if(COMMON[w])return COMMON[w];
+  w=w.replace(/ce$/,'s').replace(/ge$/,'j').replace(/^chr/,'kr').replace(/h$/,'');
+  if(w.length>3&&/[^aeiouy]e$/.test(w))w=w.slice(0,-1);
+  const t=[]; let i=0; const V='aeiouy';
+  const isV=k=>k<w.length&&'aeiou'.includes(w[k])||(w[k]==='y'&&!(k+1<w.length&&'aeiou'.includes(w[k+1])));
+  const C=(j,o={})=>t.push(Object.assign({c:j},o)), Vw=(j,g)=>t.push({v:j,g});
+  while(i<w.length){
+    const r=w.slice(i), nx=w[i+1];
+    const vm=[['ee','ㅣ'],['ea','ㅣ'],['oo','ㅜ'],['ou','ㅜ'],['au','ㅗ'],['ie','ㅣ'],['oa','ㅗ'],['ue','ㅜ']].find(([k])=>r.startsWith(k));
+    if(vm){Vw(vm[1]);i+=2;continue}
+    if(r.startsWith('ai')||r.startsWith('ay')||r.startsWith('ei')||r.startsWith('ey')){Vw('ㅔ');Vw('ㅣ');i+=2;continue}
+    const ch=w[i];
+    if('aeio'.includes(ch)||(ch==='u')){Vw({a:'ㅏ',e:'ㅔ',i:'ㅣ',o:'ㅗ',u:'ㅜ'}[ch]);i++;continue}
+    if(ch==='y'){ if(nx&&'aeiou'.includes(nx)){t.push({glide:'y'});i++;} else {Vw('ㅣ');i++;} continue}
+    if(ch==='w'){ if(nx&&'aeiou'.includes(nx)){t.push({glide:'w'});} i++; continue}
+    if(r.startsWith('sch')){C('ㅅ');i+=3;continue}
+    if(r.startsWith('sh')){C('ㅅ',{soft:'ㅣ',y:true});i+=2;continue}
+    if(r.startsWith('ch')){C('ㅊ',{soft:'ㅣ'});i+=2;continue}
+    if(r.startsWith('th')){C('ㅅ');i+=2;continue}
+    if(r.startsWith('ph')){C('ㅍ');i+=2;continue}
+    if(r.startsWith('ck')){C('ㅋ');i+=2;continue}
+    if(r.startsWith('gh')){i+=2;continue}
+    if(r.startsWith('wh')){i+=1;continue}
+    if(r.startsWith('qu')){C('ㅋ');t.push({glide:'w'});i+=2;continue}
+    if(r.startsWith('ng')){C('ㅇ',{fin:true});if(w[i+2]&&'aeiouyrl'.includes(w[i+2]))C('ㄱ');i+=2;continue}
+    if(ch==='x'){C('ㄱ',{finOk:true});C('ㅅ');i++;continue}
+    if(nx===ch&&!'lmn'.includes(ch)){i++;continue}
+    const map={b:'ㅂ',d:'ㄷ',f:'ㅍ',h:'ㅎ',j:'ㅈ',k:'ㅋ',l:'ㄹ',m:'ㅁ',n:'ㄴ',p:'ㅍ',q:'ㅋ',r:'ㄹ',s:'ㅅ',t:'ㅌ',v:'ㅂ',z:'ㅈ'};
+    if(ch==='c'){C(nx&&'eiy'.includes(nx)?'ㅅ':'ㅋ');i++;continue}
+    if(ch==='g'){C(nx&&'eiy'.includes(nx)?'ㅈ':'ㄱ');i++;continue}
+    if(map[ch]){C(map[ch],{r:ch==='r',soft:ch==='j'?'ㅣ':undefined});i++;continue}
+    i++;
+  }
+  // syllabify
+  const syl=[]; let k=0;
+  const nextIsVowel=k2=>{let q=k2;while(q<t.length&&t[q].glide)q++;return q<t.length&&t[q].v};
+  while(k<t.length){
+    const x=t[k];
+    if(x.glide){k++;continue}
+    if(x.v){ // vowel with no consonant
+      let g=null; if(k>0&&t[k-1].glide)g=t[k-1].glide;
+      let v=x.v; if(g==='y')v=GY[v]||v; if(g==='w')v=GW[v]||v;
+      syl.push({l:'ㅇ',v,t:''}); k++; continue}
+    // consonant
+    if(nextIsVowel(k+1)){
+      let q=k+1,g=null; if(t[q].glide){g=t[q].glide;q++}
+      let v=t[q].v; if(x.y&&!g)g='y'; if(g==='y')v=GY[v]||v; if(g==='w')v=GW[v]||v;
+      const pv=syl[syl.length-1]; if(x.c==='ㄹ'&&!x.r&&pv&&!pv.t)pv.t='ㄹ';
+      syl.push({l:x.c,v,t:''}); k=q+1; continue}
+    const prev=syl[syl.length-1];
+    if(x.r&&prev&&k===t.length-1){k++;continue}
+    if(prev&&!prev.t&&!x.r&&(['ㄴ','ㅁ','ㄹ','ㅇ'].includes(x.c)||x.finOk||x.fin)){prev.t=x.c;k++;continue}
+    if(x.fin){k++;continue}
+    syl.push({l:x.c,v:x.soft||'ㅡ',t:''}); k++;
+  }
+  return syl.map(s=>comp(s.l,s.v,s.t)).join('');
+}
+const toHangul=n=>n.trim().split(/[\s\-]+/).map(translitWord).filter(Boolean).join(' ');
+
+/* ---------- name pool (인명용 한자, 자원오행 by radical) ---------- */
+const POOL={
+ '서':[['瑞',3,'auspicious, good omen'],['曙',1,'daybreak']],
+ '윤':[['潤',4,'rich, nourishing'],['玧',3,'the gleam of jade']],
+ '현':[['炫',1,'shining, radiant'],['鉉',3,'a bright bronze ring; nobility'],['泫',4,'glistening like dew'],['玹',3,'a stone like jade']],
+ '영':[['榮',0,'flourishing, honor'],['映',1,'reflecting light'],['泳',4,'swimming'],['瑛',3,'the radiance of jade']],
+ '호':[['昊',1,'the vast sky'],['浩',4,'vast, abundant'],['琥',3,'amber']],
+ '민':[['珉',3,'a beautiful stone'],['旻',1,'the autumn sky']],
+ '수':[['樹',0,'tree; to establish'],['洙',4,'a clear river'],['秀',0,'outstanding, graceful']],
+ '하':[['河',4,'river']],
+ '은':[['銀',3,'silver'],['垠',2,'the horizon']],
+ '진':[['珍',3,'precious, rare'],['津',4,'harbor, crossing'],['晉',1,'to rise, advance']],
+ '준':[['埈',2,'high, lofty'],['浚',4,'deep, profound']],
+ '지':[['智',1,'wisdom'],['池',4,'pond']],
+ '원':[['源',4,'source, origin']],
+ '해':[['海',4,'sea']],
+ '송':[['松',0,'pine tree']],
+ '연':[['淵',4,'deep pool'],['然',1,'natural, as it is']],
+ '주':[['柱',0,'pillar'],['珠',3,'pearl']],
+ '태':[['泰',4,'great, peaceful']],
+ '재':[['材',0,'talent, timber']],
+ '희':[['熙',1,'bright, prosperous']],
+ '기':[['基',2,'foundation']],
+ '담':[['潭',4,'deep pond']],
+ '경':[['炅',1,'bright light'],['鏡',3,'mirror'],['璟',3,'brilliance of jade']],
+ '동':[['桐',0,'paulownia tree'],['東',0,'east']],
+ '란':[['蘭',0,'orchid']],
+ '석':[['錫',3,'to bestow; tin']],
+ '근':[['根',0,'root']],
+ '성':[['晟',1,'bright, flourishing'],['城',2,'fortress']],
+ '규':[['圭',2,'jade tablet']],
+ '도':[['燾',1,'to shine over all']],
+};
+const NAMES={
+ f:'서윤 서현 서영 서연 서하 하윤 하은 지현 지영 지은 지윤 민서 민지 수진 수영 윤서 은서 은지 은영 연희 연서 주연 주희 재희 희수 희진 희연 경희 동희 란희 송희 해원 담희 은수 성은 하연 지연 서희 수연 윤희 경은 주은 해연',
+ m:'서준 하준 지호 민준 민호 현수 현진 영호 영수 영진 수호 윤호 은호 진수 진호 준호 준영 준서 성호 성민 성현 성진 성준 주현 태호 태현 태준 태영 태민 재원 재현 재민 경수 경호 동현 동수 동호 동민 규현 석진 석호 석현 도현 도윤 도영 근영 기현 준기 은성 영민 민수 한결',
+ u:'지수 지원 지민 수현 수민 진영 연수 주원 서진 하진 경민 송현 해진 도원 은재 지안',
+};
+function nameList(style){
+  const pick=k=>NAMES[k].split(' ').filter(n=>[...n].every(c=>POOL[c]));
+  if(style==='f')return [...pick('f'),...pick('u')];
+  if(style==='m')return [...pick('m'),...pick('u')];
+  return [...pick('f'),...pick('m'),...pick('u')];
+}
+function suggestNames(c,style){
+  const min=Math.min(...c);
+  const targets=[0,1,2,3,4].filter(e=>c[e]===min);
+  const max=Math.max(...c);
+  const w=e=>{let s=0;if(targets.includes(e))s+=min===0?4:3;targets.forEach(tg=>{if(gen(e)===tg)s+=1;if(ctl(e)===tg)s-=2});if(c[e]===max&&max>=3)s-=2;return s};
+  const scored=nameList(style).map(n=>{
+    const parts=[...n].map(syl=>{const opts=POOL[syl].slice().sort((a,b)=>w(b[1])-w(a[1]));return {syl,h:opts[0][0],e:opts[0][1],m:opts[0][2]}});
+    let score=parts.reduce((s,p)=>s+w(p.e),0);
+    const se=[...n].map(ch=>INIT_EL[decomp(ch)[0]]);
+    if(se.some(e=>targets.includes(e)))score+=0.5; // sound echoes the target too
+    if(parts[0].e===parts[1].e)score-=0.3; // gentle preference for variety within a name
+    if(gen(parts[0].e)===parts[1].e||gen(parts[1].e)===parts[0].e)score+=0.4;
+    return {n,parts,score};
+  }).sort((a,b)=>b.score-a.score||a.n.localeCompare(b.n,'ko'));
+  const out=[],used=new Set();
+  for(const s of scored){if(out.length===3)break;if(used.has(s.n[0]))continue;used.add(s.n[0]);out.push(s)}
+  return {targets,list:out};
+}
+
+/* ---------- render ---------- */
+const $=id=>document.getElementById(id);
+const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+let state={res:null,active:0,inp:null,koEdited:false,ko:''};
+
+function tile(type,i){
+  if(i==null)return `<div class="tile empty"><span class="h">?</span><span class="k">Unknown</span><span class="e">no birth time</span></div>`;
+  const e=type==='s'?STEM_E[i]:BR_E[i];
+  const h=type==='s'?STEM_H[i]:BR_H[i], k=type==='s'?STEM_K[i]:BR_K[i];
+  const sub=type==='s'?`${yy(i)} ${EL_EN[e]}`:`${BR_A[i]} · ${EL_EN[e]}`;
+  return `<div class="tile el-${EL[e]}"><span class="h">${h}</span><span class="k">${k}</span><span class="e">${sub}</span></div>`;
+}
+function pillarsHTML(ch){
+  const cols=[['hour','Hour'],['day','Day'],['month','Month'],['year','Year']];
+  return `<div class="pillars">`+cols.map(([k,l])=>{const p=ch[k];return `<div class="pillar${k==='day'?' me':''}"><div class="ph">${l}${k==='day'?' · you':''}</div>${tile('s',p?p.s:null)}${tile('b',p?p.b:null)}</div>`}).join('')+`</div>`;
+}
+function render(){
+  const {res,inp}=state; const out=$('out');
+  const chart=res.charts[state.active].chart;
+  const c=counts(chart), total=c.reduce((a,b)=>a+b,0), dmS=chart.day.s, dmE=STEM_E[dmS];
+  const max=Math.max(...c);
+  const support=c[dmE]+c[mod(dmE-1,5)];
+  const strength=support*2>total?'strong':(support*2===total?'balanced':'gentle');
+  let h='';
+
+  // chart
+  h+=`<section><p class="kicker">Your chart · 사주팔자</p><h2>${inp.nameEn?esc(inp.nameEn)+'’s':'Your'} four pillars</h2>
+  <p class="lede">Born ${inp.dateLabel}, ${esc(inp.placeLabel)}${inp.time?` at ${inp.time.map(n=>String(n).padStart(2,'0')).join(':')}`:', time unknown'}. Read right to left from your birth year to your hour; the day pillar's top character is you.</p>`;
+  if(res.boundary)h+=`<div class="notice">You were born on the day the solar term <b>${res.boundary.term}</b> began, at ${res.boundary.time} local time. Without a birth time your ${res.boundary.term.startsWith('Ipchun')?'year and month pillars':'month pillar'} could go either way, so both versions are below.</div>
+  <div class="alts" role="group" aria-label="Chart version">${res.charts.map((x,i)=>`<button type="button" data-alt="${i}" aria-pressed="${i===state.active}">${x.label}</button>`).join('')}</div>`;
+  h+=pillarsHTML(chart);
+  const yb=chart.year.b;
+  h+=`<p class="chartfoot">Saju year: ${STEM_H[chart.year.s]}${BR_H[yb]} (${STEM_K[chart.year.s]}${BR_K[yb]}), the year of the ${yy(chart.year.s)} ${EL_EN[STEM_E[chart.year.s]]} ${BR_A[yb]}. The Korean year starts at Ipchun, around 4 February, not on 1 January.${res.notes.map(n=>' '+n).join('')}</p></section>`;
+
+  // day master
+  const D=DM[dmS];
+  h+=`<section><p class="kicker">Day master · 일간</p><div class="dm"><div class="seal el-${EL[dmE]}" aria-hidden="true">${STEM_H[dmS]}</div><div class="prose">
+  <h3>${yy(dmS)} ${EL_EN[dmE]}: ${D.img}</h3><p>${D.body}</p>
+  <div class="traits">${D.traits.map(t=>`<span>${t}</span>`).join('')}</div>
+  <p>By a simple count, your own element and the element that feeds it (${EL_EN[mod(dmE-1,5)]}) make up ${support} of ${total} characters, giving a <b>${strength} support-count profile</b>. This is not a full traditional strength assessment. ${strength==='strong'?'You have plenty of drive; your chart benefits from outlets: work, giving, and challenges that use that energy.':strength==='gentle'?'You do best with support: good allies, rest and learning recharge you more than pushing harder.':'You sit near balance, which makes you adaptable across different situations.'}</p></div></div></section>`;
+
+  // elements
+  const missing=[0,1,2,3,4].filter(e=>c[e]===0);
+  const minC=Math.min(...c), weak=[0,1,2,3,4].filter(e=>c[e]===minC);
+  h+=`<section><p class="kicker">Five elements · 오행</p><h2>Your element balance</h2><p class="lede">How the ${total} characters in your chart spread across the five elements.</p><div class="bars">`+
+  [0,1,2,3,4].map(e=>`<div class="bar"><span class="nm"><b style="color:var(--${EL[e]})">${EL_HAN[e]}</b>${EL_EN[e]}</span><div class="track" role="img" aria-label="${EL_EN[e]}: ${c[e]} of ${total}"><div class="fill" style="width:${c[e]/total*100}%;background:var(--${EL[e]})"></div></div><span class="n">${c[e]}</span></div>`).join('')+`</div>`;
+  const wk=weak.map(e=>EL_EN[e]).join(' and ');
+  h+=`<div class="prose" style="margin-top:14px"><p>${missing.length?`The visible characters contain no <b>${missing.map(e=>EL_EN[e]).join('</b> or <b>')}</b>.`:`Every element appears at least once, in this visible-character count.`} ${weak.length&&!missing.length?`The lightest is <b>${wk}</b>.`:''} ${c.indexOf(max)>-1&&max>=3?`<b>${[0,1,2,3,4].filter(e=>c[e]===max).map(e=>EL_EN[e]).join(' and ')}</b> is the loudest voice.`:''}</p>`+
+  weak.map(e=>`<p><b style="color:var(--${EL[e]})">To bring in ${EL_EN[e]}</b>: ${ELI[e].boost}. Its colour is ${ELI[e].color}, its season ${ELI[e].season}, its direction ${ELI[e].dir}.</p>`).join('')+`</div></section>`;
+
+  // years
+  const now=Date.now(), nowLam=sunLon(jdOf(now)), nd=new Date();
+  let cy=nd.getFullYear(); if(nd.getMonth()<=1&&monthIdx(nowLam)>=10)cy--;
+  h+=`<section><p class="kicker">Years ahead · 세운</p><h2>How the coming years meet you</h2><p class="lede">Each year has its own pillar. Its top element, set against your day master, sets the year's theme.</p><div class="cards">`+
+  [cy,cy+1].map(Y=>{const yi=mod(Y-4,60),s=yi%10,b=yi%12,rel=relation(dmE,STEM_E[s]);const [t1,t2]=YEAR_TXT[rel];
+    return `<div class="card"><div class="yr"><b class="el-${EL[STEM_E[s]]}" style="background:none">${STEM_H[s]}${BR_H[b]}</b><span>${Y} · ${STEM_K[s]}${BR_K[b]} · ${yy(s)} ${EL_EN[STEM_E[s]]} ${BR_A[b]}</span></div><h4>${t1}</h4><p>${t2}</p></div>`}).join('')+`</div></section>`;
+
+  // name
+  h+=`<section><p class="kicker">Your name · 발음오행</p><h2>Your name in Korean sound</h2><p class="lede">Korean name reading gives each syllable an element by its first consonant. We guessed a Hangul spelling from your name; fix it if it sounds wrong.</p>
+  <div class="namebox"><div class="field"><label for="ko">Your name in Hangul</label><input type="text" id="ko" value="${esc(state.ko)}" lang="ko" autocomplete="off"></div>
+  <button type="button" class="ghost" id="reguess">Guess again from my name</button></div><div id="nameRead"></div></section>`;
+
+  // suggestions
+  const sug=suggestNames(c,inp.style);
+  h+=`<section><p class="kicker">Korean name · 작명</p><h2>A Korean name for your chart</h2><p class="lede">Names whose characters carry ${sug.targets.map(e=>`<b style="color:var(--${EL[e]})">${EL_EN[e]}</b>`).join(' and ')}, the element${sug.targets.length>1?'s':''} your chart is shortest on. Each character's element comes from its radical (자원오행).</p><div class="names">`+
+  sug.list.map(s=>{const se=[...s.n].map(ch=>INIT_EL[decomp(ch)[0]]);
+    return `<div class="nm-card"><div class="top"><span class="ko" lang="ko">${s.n}</span><span class="rr">${romanize(s.n)}</span></div><span class="hz" lang="ko">${s.parts.map(p=>p.h).join('')}</span>
+    <ul>${s.parts.map(p=>`<li><span class="c el-${EL[p.e]}">${p.h}</span><span><b lang="ko">${p.syl}</b> · ${p.m}<br><small style="color:var(--${EL[p.e]});font-weight:600">${EL_EN[p.e]} ${EL_HAN[p.e]}</small></span></li>`).join('')}</ul>
+    <p class="why">Sound: ${se.map(e=>EL_EN[e]).join(' → ')}. Pair it with any Korean family name, or keep your own.</p></div>`}).join('')+`</div></section>`;
+
+  h+=`<section><p class="kicker">How this works</p><ul class="notes">
+  <li>Pillars are calculated from the sun's position for your birthplace's local time, so the year turns at Ipchun and each month at its solar term.</li>
+  <li>Without a birth time, the hour pillar is left out. Your day master, element balance and yearly themes are still read from the remaining six characters.</li>
+  <li>Element balance here is a simple count of the main element of each character. A full professional reading also weighs hidden stems and seasonal strength.</li>
+  <li>Name characters are drawn from common Korean name hanja. Check the official Supreme Court name-hanja list before using one for a legal name.</li>
+  <li>Saju is a cultural tradition for reflection and fun, not a prediction you should base big decisions on.</li></ul></section>`;
+
+  out.innerHTML=h;
+  out.querySelectorAll('[data-alt]').forEach(b=>b.addEventListener('click',()=>{state.active=+b.dataset.alt;render()}));
+  $('ko').addEventListener('input',e=>{state.ko=e.target.value;state.koEdited=true;renderName(c)});
+  $('reguess').addEventListener('click',()=>{state.ko=toHangul(inp.nameEn||'');state.koEdited=false;$('ko').value=state.ko;renderName(c)});
+  renderName(c);
+  enrichReading(chart,c,dmS,dmE,total);
+}
+function renderName(c){
+  const box=$('nameRead'); const syl=[...state.ko].filter(isSyl);
+  if(!syl.length){box.innerHTML=`<p class="hint">Type your name in Hangul to see its sound elements.</p>`;return}
+  const els=syl.map(ch=>INIT_EL[decomp(ch)[0]]);
+  let h='<div class="syls">';
+  syl.forEach((ch,i)=>{
+    if(i>0){const a=els[i-1],b=els[i];let t,cl='';
+      if(a===b)t='same';else if(gen(a)===b){t='feeds';cl='good'}else if(gen(b)===a){t='fed by';cl='good'}else{t='clashes';cl='bad'}
+      h+=`<span class="flow ${cl}">${t}<br>→</span>`}
+    h+=`<span class="syl el-${EL[els[i]]}"><b lang="ko">${ch}</b><small>${EL_EN[els[i]]}</small></span>`});
+  h+='</div>';
+  const min=Math.min(...c), weak=[0,1,2,3,4].filter(e=>c[e]===min);
+  const helps=[...new Set(els.filter(e=>weak.includes(e)))];
+  const clashes=els.slice(1).filter((b,i)=>{const a=els[i];return a!==b&&gen(a)!==b&&gen(b)!==a}).length;
+  h+=`<div class="prose"><p>${helps.length?`Good match: your name's sound brings in <b>${helps.map(e=>EL_EN[e]).join(' and ')}</b>, which your chart is short on.`:`Your name's sound doesn't add ${weak.map(e=>EL_EN[e]).join(' or ')}, the element${weak.length>1?'s':''} your chart is shortest on. The suggested Korean names below are picked to fill that gap.`} ${clashes===0?'The sounds flow smoothly from one syllable to the next.':`There ${clashes===1?'is one place':'are '+clashes+' places'} where neighbouring sounds clash, which name readers see as a little friction.`}</p></div>`;
+  box.innerHTML=h;
+}
+
+
+/* Expanded English reading: reflective interpretation of the existing visible elements. */
+const LIFE=[
+ {gift:'You may feel most engaged when you can develop an idea over time, help someone grow, or give a project a clear direction.',work:'Try roles or projects involving teaching, planning, design development or long-term building. Notice whether you prefer setting a direction or helping a team find its way.',love:'Shared growth can be an important theme. You may show care through encouragement and future plans; ask whether the other person wants advice or simply a listening ear.',money:'A growth-minded approach can keep you focused on long-term goals. Watch for adding more commitments before the earlier ones have become sustainable.',step:'Choose one unfinished idea and define a small, visible next step.',question:'Where would flexibility help me grow without giving up my values?'},
+ {gift:'Warmth, expression and bringing ideas into the open are useful themes to explore. You may enjoy helping people feel involved.',work:'Explore presenting, storytelling, creative collaboration or community-facing projects. Pair the excitement of a launch with a realistic finishing routine.',love:'Visible affection and shared experiences may feel meaningful. Leave room for quieter forms of care, and say clearly when you need time to recharge.',money:'Enthusiasm can make an opportunity feel urgent. Give nonessential purchases a pause and distinguish lasting value from the excitement of the moment.',step:'Share one idea with someone you trust, then leave an open space in your schedule.',question:'Which commitments still feel meaningful when the initial excitement fades?'},
+ {gift:'Turning intentions into something dependable is a useful theme. You may appreciate practical care, continuity and a sense of belonging.',work:'Explore coordinating projects, operations, hands-on making or supporting a team. Define where your responsibility ends so reliability does not become overextension.',love:'Consistency and practical gestures can be a language of care. Express your own wishes directly instead of assuming that looking after others will communicate them.',money:'A preference for stability can support simple routines. Revisit habits periodically so familiarity does not become the only reason to keep them.',step:'Make one everyday routine easier, and let someone else own a task you usually absorb.',question:'What am I carrying that is no longer mine to carry?'},
+ {gift:'Discernment, clarity and refining what matters are useful themes. You may enjoy noticing the difference between something adequate and something carefully finished.',work:'Explore editing, analysis, quality-focused craft or process improvement. Agree on what “finished” means before perfection becomes a moving target.',love:'Respect, trust and clear communication may matter strongly. Balance honesty with warmth, and ask questions before offering corrections.',money:'Clear categories and deliberate choices may suit you. Leave room for enjoyment so planning remains a helpful tool instead of an impossible standard.',step:'Finish one task to a clear, reasonable standard, then stop polishing it.',question:'Where would “good enough” free up energy for what matters more?'},
+ {gift:'Curiosity, reflection and connecting different perspectives are useful themes. You may appreciate time to absorb a situation before choosing a direction.',work:'Explore research, writing, strategy or projects that connect ideas. Turn reflection into a small experiment with a finish date so possibilities do not stay abstract.',love:'Thoughtful attention and space to open up can feel valuable. Say what you need aloud rather than relying on the other person to infer it.',money:'Information gathering can support considered choices, but endless options can delay ordinary decisions. Use a simple rule for small recurring choices.',step:'Write down a recurring idea and test one small part of it this week.',question:'What do I already know enough about to take the next step?'}
+];
+const ROLE_COPY={companion:['Companions · 비겁','Identity, peers and collaboration','Notice when independence helps and when sharing the load works better.'],resource:['Resources · 인성','Learning, support and reflection','Make room to receive help, then put one thing you learn into practice.'],output:['Expression · 식상','Creativity, communication and making','Give an idea a concrete form and invite useful feedback.'],wealth:['Results · 재성','Stewardship, practical goals and resources','Define what a useful outcome looks like before committing your time.'],power:['Structure · 관성','Responsibility, standards and boundaries','Choose a manageable commitment and make its limits explicit.']};
+function enrichReading(chart,c,ds,de,total){
+ const out=$('out'), inp=state.inp, D=DM[ds], L=LIFE[de];
+ const hi=Math.max(...c),lo=Math.min(...c),top=EL_EN.filter((_,i)=>c[i]===hi).join(' / '),low=EL_EN.filter((_,i)=>c[i]===lo).join(' / ');
+ const groups={companion:0,resource:0,output:0,wealth:0,power:0};c.forEach((n,e)=>groups[relation(de,e)]+=n);
+ const original=[...out.children];
+ const titles=[['Your birth chart','The characters behind your reading'],['Personality & inner rhythm',`${yy(ds)} ${EL_EN[de]} · ${D.img}`],['Five-element balance',`${top} is most represented`],['Your yearly themes','Two years of reflection and practical prompts'],['Your name in Korean','Pronunciation, syllables and sound elements'],['Discover a Korean name','Three suggestions with character meanings'],['Method & reading notes','What is included and what remains unknown']];
+ const makeDetail=(id,title,sub,section,n)=>{const d=document.createElement('details');d.className='reading-detail';d.id=id;d.innerHTML=`<summary><span class="detail-index">${String(n).padStart(2,'0')}</span><span><b>${title}</b><small>${sub}</small></span></summary>`;d.append(section);return d;};
+ const full=document.createElement('div');full.id='full-reading';full.hidden=!state.expanded;
+ full.innerHTML='<div class="detail-toolbar"><h2>Your deeper reading</h2><button type="button" class="ghost" id="toggle-sections">Expand all</button></div><nav class="reading-nav" aria-label="Reading topics"><a href="#detail-personality">Personality</a><a href="#detail-life">Love & work</a><a href="#detail-elements">Elements</a><a href="#detail-years">Years</a><a href="#detail-names">Names</a></nav>';
+ const ids=['chart','personality','elements','years','sound','names','method'];
+ original.forEach((sec,i)=>full.append(makeDetail('detail-'+ids[i],titles[i][0],titles[i][1],sec,i+1)));
+ const life=document.createElement('section');
+ life.innerHTML=`<p class="kicker">Everyday life · 생활 해석</p><h3>How your themes can show up</h3><p>${L.gift}</p><div class="reason">Reading basis: your day stem is ${STEM_H[ds]} (${yy(ds)} ${EL_EN[de]}). These are broad symbolic prompts, not conclusions about your relationships, career or finances.</div><h4>Love & relationships</h4><p>${L.love}</p><h4>Work & talents</h4><p>${L.work}</p><h4>Money habits</h4><p>${L.money}</p><h4>Balance in everyday life</h4><p>Your most represented visible element is ${top}; your least represented is ${low}. Try a different rhythm through ${ELI[c.indexOf(lo)].boost}. A low count is not a personal defect, and adding an element is not a guaranteed remedy.</p><div class="prompt"><b>A small experiment this week</b>${L.step}</div><div class="prompt"><b>A question to sit with</b>${L.question}</div>`;
+ full.insertBefore(makeDetail('detail-life','Love, work & everyday life','Practical prompts inspired by your day master',life,3),full.querySelector('#detail-elements'));
+ const roles=document.createElement('section');roles.innerHTML=`<p class="kicker">Relationship families · 십성의 다섯 범주</p><h3>Five ways your elements relate to you</h3><p>Each visible element is compared with your ${EL_EN[de]} day master. These are the five broad relationship families; the ten individual gods require a finer yin–yang distinction.</p>${Object.entries(groups).map(([key,n])=>`<div class="role-row"><div><b>${ROLE_COPY[key][0]}</b><p>${ROLE_COPY[key][1]}</p><p>${ROLE_COPY[key][2]}</p></div><b>${n} / ${total}</b></div>`).join('')}<p class="hint">Counts include the day master itself and the main element of each branch. Hidden stems and seasonal weighting are excluded. “Wealth” is a symbolic category, not an income forecast; zero does not mean an ability or opportunity is absent.</p>`;
+ full.insertBefore(makeDetail('detail-roles','Your relationship families','Learning, expression, peers, results and structure',roles,5),full.querySelector('#detail-years'));
+ full.querySelectorAll('.detail-index').forEach((x,i)=>x.textContent=String(i+1).padStart(2,'0'));
+ const yearCards=full.querySelectorAll('#detail-years .card');yearCards.forEach((card,i)=>{const year=Number(card.querySelector('.yr span').textContent.slice(0,4));const rel=relation(de,STEM_E[mod(year-4,10)]);card.insertAdjacentHTML('beforeend',`<div class="reason">Why this theme? The annual stem’s ${EL_EN[STEM_E[mod(year-4,10)]]} element relates to your ${EL_EN[de]} as ${rel}. This is a stem-only theme; branch interactions and personal luck cycles are not assessed.</div><div class="prompt"><b>A practical focus</b>${ROLE_COPY[rel][2]}</div><p class="hint">The saju year begins at Ipchun, around early February, rather than 1 January. This theme is not a prediction of events.</p>`)});
+ full.querySelector('#detail-method section').insertAdjacentHTML('beforeend','<p class="hint">This version does not calculate ten-year luck cycles (daewoon), hidden-stem weighting, useful gods (yongsin), compatibility, health outcomes or event dates. It uses local civil time, not longitude-adjusted apparent solar time. The day changes at 23:00 under the chosen convention; other schools differ. With unknown birth time, a possible late-night day change is not modeled.</p>');
+ const hero=document.createElement('div');hero.className='reading-hero';
+ hero.innerHTML=`<p class="kicker">Your saju, at a glance · 나의 사주</p><div class="hero-top"><div><p class="reading-meta">${inp.nameEn?esc(inp.nameEn)+' · ':''}${inp.dateLabel}</p><h2>${D.img}</h2><p>${yy(ds)} ${EL_EN[de]} · ${STEM_H[ds]} ${STEM_K[ds]}</p></div><div class="seal el-${EL[de]}" aria-hidden="true">${STEM_H[ds]}</div></div><p>${D.body}</p><div class="traits">${D.traits.slice(0,3).map(t=>`<span>${t}</span>`).join('')}</div><div class="summary-grid"><div class="summary-stat"><small>Most represented</small><b>${top}</b></div><div class="summary-stat"><small>Least represented</small><b>${low}</b></div><div class="summary-stat"><small>Chart coverage</small><b>${total} of 8 characters</b></div></div>${state.res.boundary?`<div class="notice">Two birth-chart versions are possible on this solar-term date. Current version: ${esc(state.res.charts[state.active].label)}. Open “Your birth chart” to compare.</div>`:''}<p><b>Your first reflection</b><br>${L.question}</p><p class="reading-meta">${yearCards[0]?esc(yearCards[0].querySelector('.yr span').textContent.slice(0,4))+' theme · '+esc(yearCards[0].querySelector('h4').textContent):''}</p><button class="primary" type="button" id="show-reading" aria-controls="full-reading" aria-expanded="${!!state.expanded}">${state.expanded?'Hide detailed reading':'Explore my full reading ↓'}</button><p class="reading-meta">Personality · Love & work · Elements · Yearly themes · Korean names</p><p class="hint">A cultural reading for reflection. ${chart.hour?'All four pillars are included.':'Birth time is unknown; the hour pillar is not included.'}</p>`;
+ out.replaceChildren(hero,full);
+ $('show-reading').addEventListener('click',()=>{state.expanded=!state.expanded;full.hidden=!state.expanded;$('show-reading').setAttribute('aria-expanded',String(state.expanded));$('show-reading').textContent=state.expanded?'Hide detailed reading':'Explore my full reading ↓';if(state.expanded&&!full.querySelector('details[open]'))full.querySelector('details').open=true;});
+ $('toggle-sections').addEventListener('click',()=>{const all=[...full.querySelectorAll('details')],open=all.some(d=>!d.open);all.forEach(d=>d.open=open);});
+ full.querySelectorAll('details').forEach(d=>d.addEventListener('toggle',()=>{$('toggle-sections').textContent=[...full.querySelectorAll('details')].every(x=>x.open)?'Collapse all':'Expand all'}));
+ full.querySelectorAll('nav a').forEach(a=>a.addEventListener('click',()=>{full.querySelector(a.getAttribute('href')).open=true}));
+}
+
+/* ---------- form ---------- */
+function readForm(){
+  const nameEn=$('name').value.trim(), dob=$('dob').value, tz=$('place').value, noTime=$('noTime').checked, tob=$('tob').value;
+  const style=document.querySelector('input[name=style]:checked').value;
+  if(!/^\d{4}-\d{2}-\d{2}$/.test(dob))return {err:'Enter your date of birth to read your chart.'};
+  const [y,m,d]=dob.split('-').map(Number);
+  if(y<1900||y>2100)return {err:'Use a birth year between 1900 and 2100.'};
+  let time=null; if(!noTime){if(!/^\d{2}:\d{2}/.test(tob))return {err:'Enter a birth time, or tick "I don\'t know".'};time=tob.split(':').map(Number).slice(0,2)}
+  const opt=$('place').selectedOptions[0];
+  const dateLabel=new Date(Date.UTC(y,m-1,d)).toLocaleDateString('en-GB',{day:'numeric',month:'long',year:'numeric',timeZone:'UTC'});
+  return {nameEn,y,m,d,tz,time,style,dateLabel,placeLabel:opt?opt.textContent:''};
+}
+function run(isExample){
+  const inp=readForm(); const err=$('err');
+  if(inp.err){err.textContent=inp.err;err.hidden=false;return}
+  err.hidden=true; $('exampleNote').hidden=!isExample;
+  const prevName=state.inp&&state.inp.nameEn;
+  state.inp=inp; state.res=compute(inp); state.active=0; state.expanded=false;
+  if(!state.koEdited||prevName!==inp.nameEn){state.ko=toHangul(inp.nameEn);state.koEdited=false}
+  render();
+}
+buildPlaces();
+$('noTime').addEventListener('change',e=>{$('tob').disabled=e.target.checked});
+$('f').addEventListener('change',()=>run(false));
+$('f').addEventListener('submit',e=>{e.preventDefault();run(false)});
+// example
+$('name').value='Emma Clarke'; $('dob').value='1995-07-14'; $('place').value='Europe/London'; $('tob').disabled=true;
+run(true);
+</script>
+
+</body></html>
